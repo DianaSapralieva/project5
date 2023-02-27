@@ -99,7 +99,7 @@ def get_post_by_id(id: int):
     # Convert the ID to a string
     id_str = str(id)
     # Execute the SQL query using the ID parameter
-    cursor.execute("DELETE FROM posts WHERE id= %s", (id_str,))
+    cursor.execute("DELETE FROM posts WHERE id= %s RETURNING *", (id_str,))
     # Get the corresponding row from the DBMS
     connection.commit() 
     # If no row is found, raise an HTTP Exception
