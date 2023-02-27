@@ -2,21 +2,22 @@ from fastapi import FastAPI, Body, Response,status,HTTPException
 from pydantic import BaseModel #schema
 from typing import Optional
 import psycopg2 
+from psycopg2.extras import RealDictCursor
 
 try:
    connection=psycopg2.connect(
       host="localhost",
       database="reddit_clone",
       user="postgres",
-      password="API"
-   )
+      password="API",
+      cursor_factory=RealDictCursor )
 
    cursor=connection.cursor()
    print("DataBase connection is succesful")
 except Exception as error:
    print("DataBase coonection failed")
    print("Error",error)
-   
+
 
 
 def next_id(posts):
@@ -37,10 +38,6 @@ def find_post_index(given_id):
             return index
 
 
-
-
-
-
 class BlogPost(BaseModel):
    title: str
    content: str
@@ -56,16 +53,73 @@ my_blog_post=[
 
 @app.get("/posts")#end point using path/and method Get
 def get_posts():
-   return {"data": my_blog_post}
+   #writing the sql query
+   cursor.execute("SELECT * FROM posts")
+   #retrieves all the posts (list)
+   database_posts=cursor.fetchall()
+   print(database_posts)
+   return {"data": database_posts}
+
+@app.put("/posts/{id}")
+def update_post_by_id(id: int, post: BlogPost):
+    # Convert the ID to a string
+    id_str = str(id)
+    # Execute the SQL query to update the post with the given ID
+    cursor.execute(
+        "UPDATE posts SET title = %s, content = %s WHERE id = %s",
+        (post.title, post.content, id_str)
+    )
+    # Commit the transaction
+    connection.commit()
+    # Get the corresponding row from the DBMS
+    row = cursor.fetchone()
+    # If no row is found, raise an HTTP Exception
+    if row is None:
+        raise HTTPException(status_code=404, detail="404 Post not found")
+    # Return a success response
+    return {"message": "Post updated successfully."}, 200
+
+
+@app.get("/posts/{id}")
+def get_post_by_id(id: int):
+    # Convert the ID to a string
+    id_str = str(id)
+    # Execute the SQL query using the ID parameter
+    cursor.execute("SELECT * FROM posts WHERE id = %s", (id_str,))
+    # Get the corresponding row from the DBMS
+    row = cursor.fetchone()
+    # If no row is found, raise an HTTP Exception
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="404 Post not found")
+    # Return the row to the client
+    return row
+
+@app.delete("/posts/{id}")
+def get_post_by_id(id: int):
+    # Convert the ID to a string
+    id_str = str(id)
+    # Execute the SQL query using the ID parameter
+    cursor.execute("DELETE FROM posts WHERE id= %s", (id_str,))
+    # Get the corresponding row from the DBMS
+    connection.commit() 
+    # If no row is found, raise an HTTP Exception
+    row=cursor.rowcount
+    print(row)
+    if row == 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="404 Post not found")
+   #remove the element from the list
+     # Return a success response
+   
+    return {"message": "Post deleted successfully."}, status.HTTP_204_NO_CONTENT
+
 
 @app.post("/posts", status_code= status.HTTP_201_CREATED)
-def create_posts(new_post: BlogPost, response: Response):
-   post_data=new_post.dict()
-   temp_data={"id":next_id(my_blog_post)}
-   temp_data.update(post_data)
-   my_blog_post.append(temp_data)
-   #response.status_code=201
-   return {"message":f"new blog posts added with title:{new_post.title} "}
+def create_posts(new_post: BlogPost):
+   cursor.execute("INSERT INTO posts (title, content, author, published, rating) "+
+                  "VALUES (%s,%s,%s,%s,%s)RETURNING * ", (new_post.title,new_post.content,new_post.author,new_post.published,new_post.rating))
+   new_post=cursor.fetchone()
+   connection.commit()#saves changes to the data base
+   return {"data":new_post}
 
 
 @app.get("/posts/{id_param}")
