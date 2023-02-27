@@ -100,12 +100,11 @@ def get_post_by_id(id: int):
     id_str = str(id)
     # Execute the SQL query using the ID parameter
     cursor.execute("DELETE FROM posts WHERE id= %s RETURNING *", (id_str,))
+    row = cursor.fetchone()
     # Get the corresponding row from the DBMS
     connection.commit() 
     # If no row is found, raise an HTTP Exception
-    row=cursor.rowcount
-    print(row)
-    if row == 0:
+    if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="404 Post not found")
    #remove the element from the list
      # Return a success response
