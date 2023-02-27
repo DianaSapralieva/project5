@@ -110,7 +110,7 @@ def get_post_by_id(id: int):
    #remove the element from the list
      # Return a success response
    
-    return {"message": "Post deleted successfully."}, status.HTTP_204_NO_CONTENT
+    return {"message": "Post deleted successfully."}, Response(status_code=status.HTTP_204_NO_CONTENT) 
 
 
 @app.post("/posts", status_code= status.HTTP_201_CREATED)
