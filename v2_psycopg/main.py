@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Body, Response,status,HTTPException
-from pydantic import BaseModel #schema
+from pydantic import BaseModel 
 from typing import Optional
 import psycopg2 
 from psycopg2.extras import RealDictCursor
@@ -157,4 +157,5 @@ def replace_post(id_param: int, updated_post: BlogPost, response: Response):
     #replace my blog posts with updated post dict
     my_blog_post[corresponding_index]=updated_post_dict
     return updated_post_dict
+
    
