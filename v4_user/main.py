@@ -9,13 +9,6 @@ from sqlalchemy.exc import IntegrityError
 #Create the tables if they don't exist yet
 models.Base.metadata.create_all(bind=database_engine)
     
-# Pydantic schema for POST Body (sent by Client) validation
-class BlogPost(BaseModel):
-    title: str
-    content: str
-    author: str
-    rating: Optional[int] = None
-    published: bool = True
 
 # API instance name
 app = FastAPI()
