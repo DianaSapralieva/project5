@@ -5,7 +5,7 @@ from . import models, schemas #. means current folder
 from .database import database_engine, get_db  #. means current folder
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-
+from .utilities import hash_manager
 #Create the tables if they don't exist yet
 models.Base.metadata.create_all(bind=database_engine)
     
@@ -129,6 +129,9 @@ def get_user(uri_id:int, db:Session=Depends(get_db)):
 #
 @app.post('/users', status_code=status.HTTP_201_CREATED, response_model=schemas.User_Response)
 def create_user(user_body: schemas.User, db: Session = Depends(get_db)):
+    #hashing the password 
+    pwd_hashed=hash_manager.hash_pass(user_body.password)
+    user_body.password=pwd_hashed
     new_user = models.User(**user_body.dict()) #** pass to the model builder from SQLAlchemy the serialize of the pydantic model
     db.add(new_user)
     db.commit()
