@@ -20,7 +20,7 @@ app = FastAPI()
 
 ############### BLOGPOSTS ENDPOINTS ####################
 # GET ALL BLOGPOSTS
-@app.get("/")
+@app.get("/posts")
 def get_posts(db: Session = Depends(get_db)):
     all_posts = db.query(models.BlogPost).all()
     return {"dataposts": all_posts}
