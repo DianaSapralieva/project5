@@ -5,7 +5,8 @@ from . import models, schemas #. means current folder
 from .database import database_engine, get_db  #. means current folder
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from .utilities import hash_manager
+from .utilities import hash_manager, jwt_manager
+
 #Create the tables if they don't exist yet
 models.Base.metadata.create_all(bind=database_engine)
     
@@ -102,6 +103,13 @@ def update_post(uri_id: int, post_body: schemas.BlogPost, db: Session = Depends(
 #
 # GET all the users endpoint
 #
+incorrect_exeption = HTTPException(
+           status_code=status.HTTP_401_UNAUTHORIZED,
+           detail=f"Incorrect username or passsword",
+           headers={"WWW-Authenticate":"Bearer"}
+        )
+
+
 @app.get('/users', response_model=List[schemas.User_Response])
 def get_users(db: Session = Depends(get_db)):
     all_users = db.query(models.User).all()
@@ -172,3 +180,20 @@ def update_user(uri_id: int, user_body: schemas.User, db: Session = Depends(get_
     query_user.update(user_body.dict())  # Update the user
     db.commit()  # Save changes to DB
     return query_user.first()
+
+@app.post('/auth', response_model=schemas.Token)
+def auth_user(user_credentials:schemas.User_Credentials,
+               db: Session = Depends(get_db)):
+     corresponding_user = db.query(models.User).filter(models.User.email == user_credentials.email).first()
+     if not corresponding_user:
+       raise incorrect_exeption
+     
+     pass_valid=hash_manager.verify_passsword(user_credentials.password,corresponding_user.password)
+     
+     if not pass_valid:
+       raise incorrect_exeption
+     
+     jwt=jwt_manager.generate_token(corresponding_user.id)
+     
+     return jwt
+  

@@ -9,7 +9,7 @@ ALGORITHM="HS256"
 #function generate token
 def generate_token(id:int ):
     payload={"user_id":id}
-    encoded_jwt=jwt.encode(payload,SERVER_KEY,algorinthm=ALGORITHM)
+    encoded_jwt=jwt.encode(payload,SERVER_KEY,algorithm=ALGORITHM)
     return Token(access_token=encoded_jwt,token_type="Bearer")
 
 #function to decode the token

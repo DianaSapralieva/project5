@@ -8,6 +8,11 @@ class User(BaseModel):
     password: str
 
 
+class User_Credentials(User):
+    pass #pass means we want the same fields as user
+    
+
+
 # Pydanticschema User Response (RESPONSE)
 class User_Response(BaseModel):
     id: int
@@ -39,3 +44,5 @@ class BlogPost_Response(BlogPost):
 class Token(BaseModel):
     access_token:str 
     token_type:str 
+
+
